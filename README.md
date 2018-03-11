@@ -1,4 +1,4 @@
-#cytube-client
+# cytube-client
 
 [![npm version](https://img.shields.io/npm/v/cytube-client.svg)](https://www.npmjs.com/package/cytube-client) [![Build Status](https://img.shields.io/travis/carriejv/cytube-client.svg)](https://travis-ci.org/carriejv/cytube-client) [![dependencies](https://img.shields.io/david/carriejv/cytube-client.svg)](https://david-dm.org/carriejv/cytube-client)  [![devDependencies](https://img.shields.io/david/dev/carriejv/cytube-client.svg)](https://david-dm.org/carriejv/cytube-client#info=devDependencies)
 
@@ -9,7 +9,7 @@ Designed to work with [sync](https://github.com/calzoneman/sync) `3.0+`.
 
 Tested with Node `8.9.4+`.
 
-##Installation
+## Installation
 
 `npm install cytube-client`
 
@@ -17,7 +17,7 @@ or
 
 `yarn add cytube-client`
 
-##Usage
+## Usage
 
 ```javascript
 var cytube = require('cytube-client');
@@ -46,7 +46,7 @@ Sync allows for joining channels that do not already exist. The server will begi
 
 Please ensure your channel names are accurate if requests are timing out.
 
-##Connection Options
+## Connection Options
 ```javascript
 var options = {
     channel: 'channel',                             // This is REQUIRED. Sync will not acknowledge connections without a specified channel.
@@ -62,7 +62,7 @@ cytube.connect(options).then( (connection) => {
 });
 ```
 
-##Retrieving Channel Information
+## Retrieving Channel Information
 
 Cytube-client provides some basic Promise-based functions for retrieving channel state information, since sync no longer has a built-in REST API.
 
@@ -72,7 +72,7 @@ connection.getPlaylist();       // Resolves to a JSON array of queued media.
 connection.getUserlist();       // Resolves to a JSON array of users connected to the channel.
 ```
 
-##Event Listeners
+## Event Listeners
 
 The [socket.io client](https://github.com/socketio/socket.io-client) is exposed at `connection.socket` and can be used to attach event listeners. See the socket.io-client documentation for more information.
 
