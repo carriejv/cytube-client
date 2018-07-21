@@ -25,6 +25,9 @@
 	},
 	"homepage": "https://github.com/carriejv/cytube-client",
 	"author": "Carrie Vrtis <cjvrtis@gmail.com> (https://www.carrievrtis.com)",
+	"contributors": [
+		"Carrie Vrtis <cjvrtis@gmail.com> (https://www.carrievrtis.com)"
+	],
 	"license": "MIT",
 	"private": false,
 	"dependencies": {

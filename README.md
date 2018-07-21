@@ -19,30 +19,61 @@ or
 
 ## Usage
 
+##### With Promises
+
 ```javascript
 var cytube = require('cytube-client');
-cytube.connect('channel').then( (connection) => {
+cytube.connect('channel').then( (client) => {
 
-    connection.getCurrentMedia().then( (result) => {
-        console.log(result);
-    }).catch( (error) => {
+    client.getCurrentMedia().then( (data) => {
+        console.log(data);
+    }).catch( (err) => {
         // Handle timeout or disconnect.
     });
 
-    connection.on('changeMedia', (data) => {
+    client.on('changeMedia', (data) => {
         console.log(data);
     });
 
     // Later ...
 
-    connection.close();
+    client.close();
 
-}).catch( (error) => {
-    // Error handling.
+}).catch( (err) => {
+    // Handle client connection errors.
 });
 ```
 
-Sync allows for joining channels that do not already exist. The server will begin sending events if they are created, but will not prevent the connection.
+##### With Callbacks
+
+```javascript
+var cytube = require('cytube-client');
+cytube.connect('channel', (err, client) => {
+
+    if(err) {
+        // Handle client connect errors.
+    }
+
+    client.getCurrentMedia((err, data) => {
+        if(err) {
+            // Handle timeout or disconnect.
+        }
+        else {
+            console.log(data);
+        }
+    });
+
+    client.on('changeMedia', (data) => {
+        console.log(data);
+    });
+
+    // Later ...
+
+    client.close();
+});
+```
+
+Sync allows clients to join channels that do not already exist. The server will begin sending events if they are created, but will not prevent the connection.
 
 Please ensure your channel names are accurate if requests are timing out.
 
@@ -66,20 +97,22 @@ cytube.connect(options).then( (connection) => {
 
 Cytube-client provides some basic Promise-based functions for retrieving channel state information, since sync no longer has a built-in REST API.
 
+These functions can also be used with callbacks.
+
 ```javascript
-connection.getCurrentMedia();   // Resolves to a JSON representation of the currently playing media.
-connection.getPlaylist();       // Resolves to a JSON array of queued media.
-connection.getUserlist();       // Resolves to a JSON array of users connected to the channel.
+client.getCurrentMedia();   // Resolves to a JSON representation of the currently playing media.
+client.getPlaylist();       // Resolves to a JSON array of queued media.
+client.getUserlist();       // Resolves to a JSON array of users connected to the channel.
 ```
 
 ## Event Listeners
 
-The [socket.io client](https://github.com/socketio/socket.io-client) is exposed at `connection.socket` and can be used to attach event listeners. See the socket.io-client documentation for more information.
+The [socket.io client](https://github.com/socketio/socket.io-client) is exposed at `client.socket` and can be used to attach event listeners. See the socket.io-client documentation for more information.
 
 ```javascript
-connection.on('event', callback);   // Shorthand for connection.socket.on
-connection.once('event', callback); // Shorthand for connection.socket.once
-connection.off('event');            // Shorthand for connection.socket.off
+client.on('event', callback);   // Shorthand for client.socket.on
+client.once('event', callback); // Shorthand for client.socket.once
+client.off('event');            // Shorthand for client.socket.off
 ```
 
 For a full list of emitted events, see the [sync](https://github.com/calzoneman/sync) documentation. Basic events include:

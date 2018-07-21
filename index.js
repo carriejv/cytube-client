@@ -77,10 +77,11 @@ CytubeConnection.prototype.close = function() {
 
 /**
  * Retrieves information about the currently playing media.
+ * @param {function} [callback] - A callback function, accepting an error (if any) and a the retrieved data as parameters. If none is provided, returns a Promise object instead.
  * @return {Promise} - A Promise that resolves to the media data in JSON format.
  */
 CytubeConnection.prototype.getCurrentMedia = function(callback) {
-	return new Promise( (resolve, reject) => {
+	let promise = new Promise( (resolve, reject) => {
 		var timeout = setTimeout(function() {
 			reject(ERR_PREFIX + 'Request timed out.');
 		}, TIMEOUT);
@@ -89,14 +90,26 @@ CytubeConnection.prototype.getCurrentMedia = function(callback) {
 			resolve(data);
 		});
 	});
+	if(callback && typeof callback === 'function') {
+		this.getCurrentMedia()
+		.then( (res) => {
+			callback(false, res);
+		}).catch( (err) => {
+			callback(err);
+		});
+	}
+	else {
+		return promise;
+	}
 };
 
 /**
  * Retrieves information about the current playlist
+ * @param {function} [callback] - A callback function, accepting an error (if any) and a the retrieved data as parameters. If none is provided, returns a Promise object instead.
  * @return {Promise} - A Promise that resolves to the playlist data in JSON format.
  */
 CytubeConnection.prototype.getPlaylist = function(callback) {
-	return new Promise( (resolve, reject) => {
+	let promise = new Promise( (resolve, reject) => {
 		var timeout = setTimeout(function() {
 			reject(ERR_PREFIX + 'Request timed out.');
 		}, TIMEOUT);
@@ -105,14 +118,26 @@ CytubeConnection.prototype.getPlaylist = function(callback) {
 			resolve(data);
 		});
 	});
+	if(callback && typeof callback === 'function') {
+		this.getPlaylist()
+		.then( (res) => {
+			callback(false, res);
+		}).catch( (err) => {
+			callback(err);
+		});
+	}
+	else {
+		return promise;
+	}
 };
 
 /**
  * Retrieves information about the current users in a channel.
+ * @param {function} [callback] - A callback function, accepting an error (if any) and a the retrieved data as parameters. If none is provided, returns a Promise object instead.
  * @return {Promise} - A Promise that resolves to the user data in JSON format.
  */
 CytubeConnection.prototype.getUserlist = function(callback) {
-	return new Promise( (resolve, reject) => {
+	let promise = new Promise( (resolve, reject) => {
 		var timeout = setTimeout(function() {
 			reject(ERR_PREFIX + 'Request timed out.');
 		}, TIMEOUT);
@@ -121,15 +146,27 @@ CytubeConnection.prototype.getUserlist = function(callback) {
 			resolve(data);
 		});
 	});
+	if(callback && typeof callback === 'function') {
+		this.getUserlist()
+		.then( (res) => {
+			callback(false, res);
+		}).catch( (err) => {
+			callback(err);
+		});
+	}
+	else {
+		return promise;
+	}
 };
 
 /**
  * Establishes a connection to a cytube socket server and joins a channel.
  * @param {Object} settings - A cytube-client settings object.
+ * @param {function} [callback] - A callback function, accepting an error (if any) and a the retrieved data as parameters. If none is provided, returns a Promise object instead.
  * @return {Promise} - A Promise object that resolves to a CytubeConnection.
  * @api public
  */
-let connect = function(settings) {
+let connect = function(settings, callback) {
 	let promise = new Promise( (resolve, reject) => {
 		let channel = (settings.channel ? settings.channel : settings);
 		let socketServer;
@@ -174,7 +211,7 @@ let connect = function(settings) {
 		// When the socket promise resolves, we can move forward and join channels.
 		socketPromise.then( (res) => {
 			let socket = res;
-			let connect = function() {
+			let join = function() {
 				socket.on('connect', () => {
 					socket.emit('joinChannel', {
 						name: channel
@@ -200,7 +237,7 @@ let connect = function(settings) {
 				}
 			});
 
-			connect();
+			join();
 			let connection = new CytubeConnection(socket, socketServer, channel);
 			resolve(connection);
 
@@ -209,8 +246,17 @@ let connect = function(settings) {
 			reject(err);
 		});
 	});
-
-	return promise;
+	if(callback && typeof callback === 'function') {
+		connect(settings)
+		.then( (res) => {
+			callback(false, res);
+		}).catch( (err) => {
+			callback(err);
+		});
+	}
+	else {
+		return promise;
+	}
 };
 
 module.exports = {

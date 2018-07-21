@@ -64,6 +64,17 @@ describe('cytube-client', function() {
 				done(err);
 			});
 		});
+		it('should also work with a callback', function(done) {
+
+			cytubeClient.connect(testOptions, (err, client) => {
+				if(!err && client) {
+					done();
+				}
+				else {
+					done(err);
+				}
+			});
+		});
 
 	});
 
@@ -80,6 +91,28 @@ describe('cytube-client', function() {
 				cytubeClient.connect(testOptions)
 				.then(function(res) {
 					res.getCurrentMedia().should.eventually.equal('Success!').notify(done);
+				})
+				.catch(function(err) {
+					done(err);
+				});
+			});
+
+			it('should also work with a callback', function(done) {
+				server.on('connection', function(socket) {
+					socket.on('joinChannel', function() {
+						server.emit('changeMedia', 'Success!');
+					});
+				})
+				cytubeClient.connect(testOptions)
+				.then(function(res) {
+					res.getCurrentMedia( (err, data) => {
+						if(!err && data === 'Success!') {
+							done();
+						}
+						else {
+							done(err);
+						}
+					});
 				})
 				.catch(function(err) {
 					done(err);
@@ -105,6 +138,28 @@ describe('cytube-client', function() {
 				});
 			});
 
+			it('should also work with a callback', function(done) {
+				server.on('connection', function(socket) {
+					socket.on('joinChannel', function() {
+						server.emit('playlist', 'Success!');
+					});
+				})
+				cytubeClient.connect(testOptions)
+				.then(function(res) {
+					res.getPlaylist( (err, data) => {
+						if(!err && data === 'Success!') {
+							done();
+						}
+						else {
+							done(err);
+						}
+					});
+				})
+				.catch(function(err) {
+					done(err);
+				});
+			});
+
 		});
 
 		describe('#getUserlist()', function() {
@@ -118,6 +173,28 @@ describe('cytube-client', function() {
 				cytubeClient.connect(testOptions)
 				.then(function(res) {
 					res.getUserlist().should.eventually.equal('Success!').notify(done);
+				})
+				.catch(function(err) {
+					done(err);
+				});
+			});
+
+			it('should also work with a callback', function(done) {
+				server.on('connection', function(socket) {
+					socket.on('joinChannel', function() {
+						server.emit('userlist', 'Success!');
+					});
+				})
+				cytubeClient.connect(testOptions)
+				.then(function(res) {
+					res.getUserlist( (err, data) => {
+						if(!err && data === 'Success!') {
+							done();
+						}
+						else {
+							done(err);
+						}
+					});
 				})
 				.catch(function(err) {
 					done(err);
