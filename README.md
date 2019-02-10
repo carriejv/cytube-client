@@ -7,7 +7,7 @@ A simple [Promise-based](https://developer.mozilla.org/en-US/docs/Web/JavaScript
 
 Designed to work with [sync](https://github.com/calzoneman/sync) `3.0+`.
 
-Tested with Node `8.9.4+`.
+Tested with Node `6.16.0+`.
 
 ## Installation
 
