@@ -51,16 +51,6 @@ CytubeConnection.prototype.once = function(event, callback) {
 };
 
 /**
- * Attaches a listener for an event.
- * @param {string} event - An event id.
- */
-CytubeConnection.prototype.on = function(event, callback) {
-	this.socket.on(event, (res) => {
-		callback(res);
-	});
-};
-
-/**
  * Removes a listener for an event.
  * @param {string} event - An event id.
  */
