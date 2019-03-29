@@ -1,5 +1,6 @@
 # cytube-client
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/faced46fd54b4252ac8ca9cfb840b944)](https://app.codacy.com/app/carriejv/cytube-client?utm_source=github.com&utm_medium=referral&utm_content=carriejv/cytube-client&utm_campaign=Badge_Grade_Dashboard)
 [![npm version](https://img.shields.io/npm/v/cytube-client.svg)](https://www.npmjs.com/package/cytube-client) [![Build Status](https://img.shields.io/travis/carriejv/cytube-client.svg)](https://travis-ci.org/carriejv/cytube-client) [![dependencies](https://img.shields.io/david/carriejv/cytube-client.svg)](https://david-dm.org/carriejv/cytube-client)  [![devDependencies](https://img.shields.io/david/dev/carriejv/cytube-client.svg)](https://david-dm.org/carriejv/cytube-client#info=devDependencies)
 
 
