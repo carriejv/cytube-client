@@ -16,6 +16,7 @@
 		"start": "node index.js",
 		"test": "npm run lint && npm run testOnly",
 		"testOnly": "nyc --reporter=html --reporter=text mocha --exit ./test/test.js",
+		"testIntegration": "mocha --exit --timeout 15000 ./test/integration.js",
 		"lint": "eslint . --ext .js"
 	},
 	"repository": {
@@ -34,7 +35,7 @@
 	"private": false,
 	"dependencies": {
 		"axios": "^0.20.0",
-		"socket.io-client": "^3.0.3"
+		"socket.io-client": "2.0.3"
 	},
 	"devDependencies": {
 		"chai": "^4.2.0",
@@ -42,6 +43,6 @@
 		"eslint": "^7.14.0",
 		"mocha": "^8.1.3",
 		"nyc": "^15.1.0",
-		"socket.io": "^3.0.3"
+		"socket.io": "2.0.3"
 	}
 }

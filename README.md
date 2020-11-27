@@ -123,5 +123,18 @@ queue           // Fired when a new media item is queued.
 chatMsg         // Fired on new chat message.
 addUser         // Fired on a user joining the channel
 userLeave       // Fired on a user leaving the channel.
-
 ```
+
+## Contributions
+
+Contributions and pull requests are always welcome. Please be sure your code passes all existing tests and linting.
+
+Pull requests with full code coverage are strongly encouraged.
+
+An integration test is provided for testing connections to cytu.be itself. Because cytu.be channels are ephemeral by nature, this test is not run automatically as part of the normal `npm test` suite.
+
+To run the integration test, use `CYTUBE_TEST_CHANNEL="your-channel-here" npm run testIntegration`. You can also set `DEBUG=socket.io*` or `DEBUG=engine,socket.io*` to receive debug output from the websocket when running this test.
+
+## License
+
+[MIT](https://github.com/carriejv/cytube-client/blob/master/LICENSE)
