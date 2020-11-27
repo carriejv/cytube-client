@@ -1,13 +1,14 @@
 # cytube-client
 
-[![npm version](https://img.shields.io/npm/v/cytube-client.svg)](https://www.npmjs.com/package/cytube-client) [![Build Status](https://img.shields.io/travis/carriejv/cytube-client.svg)](https://travis-ci.org/carriejv/cytube-client) [![dependencies](https://img.shields.io/david/carriejv/cytube-client.svg)](https://david-dm.org/carriejv/cytube-client)  [![devDependencies](https://img.shields.io/david/dev/carriejv/cytube-client.svg)](https://david-dm.org/carriejv/cytube-client#info=devDependencies)
+[![npm version](https://img.shields.io/npm/v/cytube-client.svg)](https://www.npmjs.com/package/cytube-client) [![npm downloads](https://img.shields.io/npm/dt/cytube-client)](https://www.npmjs.com/package/cytube-client)  [![npm license](https://img.shields.io/npm/l/cytube-client.svg)](https://www.npmjs.com/package/cytube-client)
 
+[![dependencies](https://img.shields.io/david/carriejv/cytube-client.svg)](https://david-dm.org/carriejv/cytube-client) [![Build Status](https://img.shields.io/travis/com/carriejv/cytube-client.svg)](https://travis-ci.com/carriejv/cytube-client) [![GitKraken](https://img.shields.io/badge/<3-GitKraken-green.svg)](https://www.gitkraken.com/invite/om4Du5zG)
 
-A simple [Promise-based](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), non-blocking [socket.io client](https://github.com/socketio/socket.io-client) for retrieving information from [cytu.be](https://github.com/calzoneman/sync) servers with NodeJS.
+A simple [Promise-based](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), non-blocking [socket.io client](https://github.com/socketio/socket.io-client) for retrieving information from [cytu.be](https://github.com/calzoneman/sync) servers with NodeJS. Supports async/await, then/catch, and callbacks.
 
-Designed to work with [sync](https://github.com/calzoneman/sync) `3.0+`.
+Designed to work with [sync](https://github.com/calzoneman/sync) `3.7+`. The `socket.io-client` version used by `cytube-client` must match the version used by the `sync` server **exactly**.
 
-Tested with Node `6.16.0+`.
+This package is tested against Node LTS and Latest (at time of release), but should be compatible with all Node versions > `6.0`.
 
 ## Installation
 
@@ -19,32 +20,30 @@ or
 
 ## Usage
 
-##### With Promises
+### With Promises
 
 ```javascript
-var cytube = require('cytube-client');
-cytube.connect('channel').then( (client) => {
-
-    client.getCurrentMedia().then( (data) => {
-        console.log(data);
-    }).catch( (err) => {
-        // Handle timeout or disconnect.
-    });
-
-    client.on('changeMedia', (data) => {
-        console.log(data);
-    });
-
-    // Later ...
-
-    client.close();
-
-}).catch( (err) => {
+;
+let cyClient;
+try {
+    clClient = await require('cytube-client').connect('channel');
+} catch(err) {
     // Handle client connection errors.
+}
+await cyClient.getCurrentMedia();
+
+// ...
+
+cyClient.on('changeMedia', data => {
+    // ...
 });
+
+/ ...
+
+cyClient.close();
 ```
 
-##### With Callbacks
+### With Callbacks
 
 ```javascript
 var cytube = require('cytube-client');
@@ -80,15 +79,20 @@ Please ensure your channel names are accurate if requests are timing out.
 ## Connection Options
 ```javascript
 var options = {
-    channel: 'channel',                             // This is REQUIRED. Sync will not acknowledge connections without a specified channel.
-    password: 'password',                           // If the channel requires a password, it must be provided here.
-    secure: true,                                   // If true, retrieves data over SSL from the socket server. Default true.
-    reconnect: true,                                // If true, attempts to reconnect indefinitely if disconnected. Default true.
-    socketServer: 'https://your.sync.server:3000'   // If set, connects to the specified url instead of searching for a channel on cytu.be.
+    // This is REQUIRED. Sync will not acknowledge connections without a specified channel.
+    channel: 'channel',
+    // If the channel requires a password, it must be provided here.
+    password: 'password',
+    // If true, retrieves data over SSL from the socket server. Default true.
+    secure: true,
+    // If true, attempts to reconnect indefinitely if disconnected. Default true.
+    reconnect: true,
+    // If set, connects to the specified url instead of searching for a channel on cytu.be.
+    socketServer: 'https://your.sync.server:3000'
 };
 
 var cytube = require('cytube-client');
-cytube.connect(options).then( (connection) => {
+cytube.connect(options).then(connection => {
     // ...
 });
 ```
