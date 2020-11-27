@@ -3,8 +3,8 @@
 /**
  * Module Dependencies
  */
-let io = require('socket.io-client');
-let axios = require('axios');
+const io = require('socket.io-client');
+const axios = require('axios');
 
 /**
  * Constants
@@ -22,7 +22,7 @@ const TIMEOUT = 10000;
  * @property {string} socketServer - The url of the socket server.
  * @property {string} channel - The channel on which to listen for events.
  */
-let CytubeConnection = function(socket, socketServer, channel) {
+const CytubeConnection = function(socket, socketServer, channel) {
 	this.socket = socket;
 	this.socketServer = socketServer;
 	this.channel = channel;
@@ -34,7 +34,7 @@ let CytubeConnection = function(socket, socketServer, channel) {
  * @param {function} callback - Callback with one argument, containing the response data for the event.
  */
 CytubeConnection.prototype.on = function(event, callback) {
-	this.socket.on(event, (res) => {
+	this.socket.on(event, res => {
 		callback(res);
 	});
 };
@@ -45,7 +45,7 @@ CytubeConnection.prototype.on = function(event, callback) {
  * @param {function} callback - Callback with one argument, containing the response data for the event.
  */
 CytubeConnection.prototype.once = function(event, callback) {
-	this.socket.once(event, (res) => {
+	this.socket.once(event, res => {
 		callback(res);
 	});
 };
@@ -71,7 +71,7 @@ CytubeConnection.prototype.close = function() {
  * @return {Promise} - A Promise that resolves to the media data in JSON format.
  */
 CytubeConnection.prototype.getCurrentMedia = function(callback) {
-	let promise = new Promise( (resolve, reject) => {
+	let promise = new Promise((resolve, reject) => {
 		var timeout = setTimeout(function() {
 			reject(ERR_PREFIX + 'Request timed out.');
 		}, TIMEOUT);
@@ -82,9 +82,9 @@ CytubeConnection.prototype.getCurrentMedia = function(callback) {
 	});
 	if(callback && typeof callback === 'function') {
 		this.getCurrentMedia()
-		.then( (res) => {
+		.then(res => {
 			callback(false, res);
-		}).catch( (err) => {
+		}).catch(err => {
 			callback(err);
 		});
 	}
@@ -99,7 +99,7 @@ CytubeConnection.prototype.getCurrentMedia = function(callback) {
  * @return {Promise} - A Promise that resolves to the playlist data in JSON format.
  */
 CytubeConnection.prototype.getPlaylist = function(callback) {
-	let promise = new Promise( (resolve, reject) => {
+	let promise = new Promise((resolve, reject) => {
 		var timeout = setTimeout(function() {
 			reject(ERR_PREFIX + 'Request timed out.');
 		}, TIMEOUT);
@@ -110,9 +110,9 @@ CytubeConnection.prototype.getPlaylist = function(callback) {
 	});
 	if(callback && typeof callback === 'function') {
 		this.getPlaylist()
-		.then( (res) => {
+		.then(res => {
 			callback(false, res);
-		}).catch( (err) => {
+		}).catch(err => {
 			callback(err);
 		});
 	}
@@ -127,7 +127,7 @@ CytubeConnection.prototype.getPlaylist = function(callback) {
  * @return {Promise} - A Promise that resolves to the user data in JSON format.
  */
 CytubeConnection.prototype.getUserlist = function(callback) {
-	let promise = new Promise( (resolve, reject) => {
+	let promise = new Promise((resolve, reject) => {
 		var timeout = setTimeout(function() {
 			reject(ERR_PREFIX + 'Request timed out.');
 		}, TIMEOUT);
@@ -138,9 +138,9 @@ CytubeConnection.prototype.getUserlist = function(callback) {
 	});
 	if(callback && typeof callback === 'function') {
 		this.getUserlist()
-		.then( (res) => {
+		.then(res => {
 			callback(false, res);
-		}).catch( (err) => {
+		}).catch(err => {
 			callback(err);
 		});
 	}
@@ -157,7 +157,7 @@ CytubeConnection.prototype.getUserlist = function(callback) {
  * @api public
  */
 let connect = function(settings, callback) {
-	let promise = new Promise( (resolve, reject) => {
+	let promise = new Promise((resolve, reject) => {
 		let channel = (settings.channel ? settings.channel : settings);
 		let socketServer;
 
@@ -173,7 +173,7 @@ let connect = function(settings, callback) {
 			let reconnection = (settings.reconnection == false ? false : true);
 			if(settings.socketServer) {
 				socketServer = settings.socketServer;
-				socket = io(socketServer, {reconnection: reconnection});
+				socket = io(socketServer, {reconnection: reconnection, transports: ['websocket']});
 				resolve(socket);
 			}
 			else {
@@ -183,7 +183,7 @@ let connect = function(settings, callback) {
 						for(let val of res.data.servers) {
 							if(secure == val.secure) {
 								socketServer = val.url;
-								socket = io(socketServer, {reconnection: reconnection});
+								socket = io(socketServer, {reconnection: reconnection, transports: ['websocket']});
 							}
 						}
 						if(socket) {
@@ -199,15 +199,13 @@ let connect = function(settings, callback) {
 		});
 
 		// When the socket promise resolves, we can move forward and join channels.
-		socketPromise.then( (res) => {
-			let socket = res;
-			let join = function() {
-				socket.on('connect', () => {
-					socket.emit('joinChannel', {
-						name: channel
-					});
+		socketPromise.then(socket => {
+			// Set up connect handler.
+			socket.on('connect', () => {
+				socket.emit('joinChannel', {
+					name: channel
 				});
-			};
+			})
 			// CyTube doesn't give us a response to our login attempt, it just sends another needPassword -- so we have to track it ourselves.
 			let pwAttempted = false;
 			socket.on('needPassword', () => {
@@ -227,7 +225,6 @@ let connect = function(settings, callback) {
 				}
 			});
 
-			join();
 			let connection = new CytubeConnection(socket, socketServer, channel);
 			resolve(connection);
 
