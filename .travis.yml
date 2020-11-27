@@ -1,12 +1,21 @@
 language: node_js
 node_js:
-  - "node"
-  - "lts/*"
+- node
+- lts/*
 install:
-  - npm install
+- npm install
 script:
-  - npm run test
+- npm run test
 sudo: false
 cache:
   directories:
   - node_modules
+deploy:
+  provider: npm
+  email: carrie@carriejv.com
+  api_key:
+    secure: lDMRpYRyMfZQt7kkuecV3PctvAIAKnb5SQsbK03remugqfQhm6kzkQaR043bVIczUStFvI67il2rKYDBTguNHXYRAkGZKmhcf4leYU5NsPjY8Uo/FFOo/lOZzXP88UxQWkDguK7INhOiVOYMAMOdWP9PgA2FAver3XRu3+EGKepKmk8SP5mQoSSJNZGbSTC2KpsBUYqSLkJRp8UUnt/tgY0OeRfAW7fqAYF6/gr2V7SvATOh+gHijaV1WXwDZ3VlLEva0YnFLC6cxJhRKZZNDjEvXpJvX4SBjRERLqRMywJEflFXHoaSmQto8WNCsO2QHviwiXounVLZ0PWP3vb5i3Lf2EoSpHVsywhPlDc5dU0PoQvh1WxpUO147DYDlIyE3bFYdA7AJFDdCQsYoPLDRMzYVq0mjyPMN8wveROTTaQy1Tc5OQn/dB/+3jah06vsy3DGhbiLBO7c+bBJy2jQDPO9xJ+w2CHA99FlemgyIxzJWDYMo4zU27knT7QR6Heb3LxshOumVUtKP3psbFHLWUp7HkNviNu4Ll26HfgzT9tyEcCPuRBjvrSAatOtBBDZXnRG2+ZSMsEqM7K9rhyiWM3Gbwyw5Pls7m3qFJ10og8oRjnpQ0Lf4eDqpeKE8lnjfmD4tzK4vSFj07YNhvlt7mklz6YPE9cchg1+8AgcyQ0=
+  on:
+    branch: master
+    repo: carriejv/cytube-client
+  skip_cleanup: 'true'
