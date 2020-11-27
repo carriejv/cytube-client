@@ -14,7 +14,9 @@
 	},
 	"scripts": {
 		"start": "node index.js",
-		"test": "nyc mocha --exit"
+		"test": "npm run lint && npm run testOnly",
+		"testOnly": "nyc --reporter=html --reporter=text mocha --exit ./test/test.js",
+		"lint": "eslint . --ext .js"
 	},
 	"repository": {
 		"type": "git",
@@ -37,6 +39,7 @@
 	"devDependencies": {
 		"chai": "^4.2.0",
 		"chai-as-promised": "^7.1.1",
+		"eslint": "^7.14.0",
 		"mocha": "^8.1.3",
 		"nyc": "^15.1.0",
 		"socket.io": "^3.0.3"

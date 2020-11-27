@@ -1,16 +1,18 @@
 'use strict';
 
-let chai = require('chai').use(require('chai-as-promised'));
-let should = chai.should();
-let io = require('socket.io');
-let server;
-let cytubeClient = require('../index.js');
+const chai = require('chai');
+chai.use(require('chai-as-promised'));
+chai.should();
+const io = require('socket.io');
+const cytubeClient = require('../index.js');
 
-let testOptions = {
+const testOptions = {
 	socketServer: 'http://localhost:3000',
 	channel: 'test',
 	reconnection: false
 };
+
+let server;
 
 describe('cytube-client', function() {
 
@@ -53,7 +55,7 @@ describe('cytube-client', function() {
 				socket.on('joinChannel', function() {
 					server.emit('needPassword');
 				});
-				socket.on('channelPassword', function(pass) {
+				socket.on('channelPassword', function() {
 					done();
 				})
 			})

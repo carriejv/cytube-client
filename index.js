@@ -3,8 +3,8 @@
 /**
  * Module Dependencies
  */
-let io = require('socket.io-client');
-let axios = require('axios');
+const io = require('socket.io-client');
+const axios = require('axios');
 
 /**
  * Constants
@@ -22,7 +22,7 @@ const TIMEOUT = 10000;
  * @property {string} socketServer - The url of the socket server.
  * @property {string} channel - The channel on which to listen for events.
  */
-let CytubeConnection = function(socket, socketServer, channel) {
+const CytubeConnection = function(socket, socketServer, channel) {
 	this.socket = socket;
 	this.socketServer = socketServer;
 	this.channel = channel;
