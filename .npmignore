@@ -1,0 +1,12 @@
+src/
+test/
+dist/test
+.nyc_output/
+coverage/
+docs/
+tsconfig.json
+.travis.yml
+.gitignore
+.nvmrc
+.npmrc
+.eslintrc

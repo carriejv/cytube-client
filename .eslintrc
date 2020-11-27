@@ -1,0 +1,15 @@
+{
+    "root": true,
+    "extends": [
+        "eslint:recommended"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 2017
+    },
+    "env": {
+        "node": true,
+        "browser": false,
+        "es6": true,
+        "mocha": true
+    }
+}
