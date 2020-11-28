@@ -1,6 +1,6 @@
 {
 	"name": "cytube-client",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "A cytu.be (https://github.com/calzoneman/sync) client that can retrieve basic channel data and listen for channel events.",
 	"keywords": [
 		"socket.io",
