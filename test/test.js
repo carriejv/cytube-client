@@ -13,63 +13,122 @@ const testOptions = {
 };
 
 let server;
+let socket;
+let client;
 
-describe('cytube-client', function() {
+const standardHandshake = function(newSocket) {
+	socket = newSocket
+	socket.on('joinChannel', () => server.emit('setPermissions'));
+};
 
-	beforeEach(function(done) {
+const passwordHandshake = function(newSocket) {
+	socket = newSocket
+	socket.on('joinChannel', () => server.emit('needPassword'));
+	socket.on('channelPassword', password => {
+		if(password === 'password') {
+			server.emit('setPermissions');
+		}
+		else {
+			server.emit('needPassword');
+		}
+	});
+};
+
+describe('cytube-client', () => {
+
+	beforeEach(() => {
+		// Create new io server.
 		server = io().listen(3000);
-		done();
+		client = null;
+		// Emulate the 'handshake' of cytube on a successful joinChannel
+		server.on('connection', standardHandshake);
 	});
 
-	afterEach(function(done) {
+	afterEach(() => {
 		server.close();
-		done();
+		if(client) {
+			client.close();
+		}
 	});
 
-	describe('#connect()', function() {
+	describe('#connect()', () => {
 
-		it('should not work with no arguments', function(done) {
-			cytubeClient.connect().should.be.rejected.notify(done);
+		it('should not work with no arguments', async () => {
+			try {
+				client = await cytubeClient.connect();
+			}
+			catch(err) {
+				err.should.not.equal(undefined);
+				return;
+			}
+			throw new Error('No error thrown.');
 		});
-		it('should resolve with valid settings', function(done) {
-			cytubeClient.connect(testOptions).should.be.fulfilled.notify(done);
+
+		it('should resolve with valid settings', async () => {
+			client = await cytubeClient.connect(testOptions);
+			client.should.not.equal(undefined);
 		});
-		it('should disconnect if a password is required but not supplied', function(done) {
-			server.on('connection', function(socket) {
-				socket.on('joinChannel', function() {
-					server.emit('needPassword');
-				});
-			})
-			cytubeClient.connect(testOptions)
-			.then(function(res) {
-				res.on('disconnect', function() {
-					done();
-				});
-			})
-			.catch(function(err) {
-				done(err);
-			});
+
+		it('should disconnect with an error if a password is required but not supplied', async () => {
+			// Rebuild a password-handshaking server instead of the standard built in beforeEach.
+			server.close();
+			server = io().listen(3000);
+			client = null;
+			server.on('connection', passwordHandshake);
+
+			try {
+				client = await cytubeClient.connect(testOptions);
+			}
+			catch(err) {
+				err.message.should.contain('password');
+				return;
+			}
+			throw new Error('No error thrown.');
 		});
-		it('should attempt to authenticate if required and a password is provided', function(done) {
-			server.on('connection', function(socket) {
-				socket.on('joinChannel', function() {
-					server.emit('needPassword');
-				});
-				socket.on('channelPassword', function() {
-					done();
-				})
-			})
-			let passOptions = Object.assign(testOptions);
+
+		it('should disconnect with an error if a password is required but incorrect', async () => {
+			// Rebuild a password-handshaking server instead of the standard built in beforeEach.
+			server.close();
+			server = io().listen(3000);
+			client = null;
+			server.on('connection', passwordHandshake);
+
+			let passOptions = Object.assign({}, testOptions);
+			passOptions.password = 'nope';
+
+			try {
+				client = await cytubeClient.connect(passOptions);
+			}
+			catch(err) {
+				err.message.should.contain('password');
+				return;
+			}
+			throw new Error('No error thrown.');
+		});
+
+		it('should attempt to authenticate if required and a password is provided', done => {
+			// Rebuild a password-handshaking server instead of the standard built in beforeEach.
+			server.close();
+			server = io().listen(3000);
+			client = null;
+			server.on('connection', passwordHandshake);
+
+			let passOptions = Object.assign({}, testOptions);
 			passOptions.password = 'password';
-			cytubeClient.connect(passOptions)
-			.catch(function(err) {
-				done(err);
+			cytubeClient.connect(passOptions, (err, res) => {
+				if(err) {
+					done(err);
+					return;
+				}
+				client = res;	
+				done();
 			});
 		});
-		it('should also work with a callback', function(done) {
 
-			cytubeClient.connect(testOptions, (err, client) => {
-				if(!err && client) {
+		it('should also work with a callback', done => {
+			client = cytubeClient.connect(testOptions, (err, res) => {
+				if(!err && res) {
+					client = res;
 					done();
 				}
 				else {
@@ -78,36 +137,41 @@ describe('cytube-client', function() {
 			});
 		});
 
+		it('should set a custom timeout', async () => {
+			client = await cytubeClient.connect(Object.assign({timeout: 15000}, testOptions));
+			client.should.not.equal(undefined);
+			client.timeout.should.equal(15000);
+		});
+
+		it('should set a default timeout', async () => {
+			client = await cytubeClient.connect(Object.assign(testOptions));
+			client.should.not.equal(undefined);
+			client.timeout.should.equal(10000);
+		});
+
 	});
 
-	describe('CytubeConnection', function() {
+	describe('CytubeConnection', () => {
 
-		describe('#getCurrentMedia()', function() {
+		describe('#getCurrentMedia()', () => {
 
-			it('should return the value emitted on changeMedia', function(done) {
-				server.on('connection', function(socket) {
-					socket.on('joinChannel', function() {
-						server.emit('changeMedia', 'Success!');
-					});
-				})
+			it('should return the value emitted on changeMedia', done => {
 				cytubeClient.connect(testOptions)
 				.then(function(res) {
+					client = res;
 					res.getCurrentMedia().should.eventually.equal('Success!').notify(done);
+					server.emit('changeMedia', 'Success!');
 				})
 				.catch(function(err) {
 					done(err);
 				});
 			});
 
-			it('should also work with a callback', function(done) {
-				server.on('connection', function(socket) {
-					socket.on('joinChannel', function() {
-						server.emit('changeMedia', 'Success!');
-					});
-				})
+			it('should also work with a callback', done => {
 				cytubeClient.connect(testOptions)
 				.then(function(res) {
-					res.getCurrentMedia( (err, data) => {
+					client = res;
+					res.getCurrentMedia((err, data) => {
 						if(!err && data === 'Success!') {
 							done();
 						}
@@ -115,40 +179,64 @@ describe('cytube-client', function() {
 							done(err);
 						}
 					});
+					server.emit('changeMedia', 'Success!');
 				})
 				.catch(function(err) {
 					done(err);
 				});
 			});
 
+			it('should time out if the response is too slow', async () => {
+				try {
+					client = await cytubeClient.connect(Object.assign({timeout: 1}, testOptions));
+					await client.getCurrentMedia();
+				}
+				catch(err) {
+					err.message.should.contain('timed out');
+					return;
+				}
+				throw new Error('No error thrown.');
+			});
+
+			it('should time out if the response is too slow when using callbacks', done => {
+				cytubeClient.connect(Object.assign({timeout: 1}, testOptions), (err, res) => {
+					if(err) {
+						done(err);
+						return;
+					}
+					client = res;
+					client.getCurrentMedia(err => {
+						if(!err) {
+							done('No error received.');
+							return;
+						}
+						err.message.should.contain('timed out');
+						done();
+					});
+				});
+			});
+
 		});
 
-		describe('#getPlaylist()', function() {
+		describe('#getPlaylist()', () => {
 
-			it('should return the value emitted on playlist', function(done) {
-				server.on('connection', function(socket) {
-					socket.on('joinChannel', function() {
-						server.emit('playlist', 'Success!');
-					});
-				})
+			it('should return the value emitted on playlist', done => {
 				cytubeClient.connect(testOptions)
 				.then(function(res) {
+					client = res;
 					res.getPlaylist().should.eventually.equal('Success!').notify(done);
+					server.emit('playlist', 'Success!');
 				})
 				.catch(function(err) {
 					done(err);
 				});
 			});
 
-			it('should also work with a callback', function(done) {
-				server.on('connection', function(socket) {
-					socket.on('joinChannel', function() {
-						server.emit('playlist', 'Success!');
-					});
-				})
-				cytubeClient.connect(testOptions)
+			it('should also work with a callback', done => {
+				client = cytubeClient.connect(testOptions)
 				.then(function(res) {
-					res.getPlaylist( (err, data) => {
+					client = res;
+					res.getPlaylist((err, data) => {
 						if(!err && data === 'Success!') {
 							done();
 						}
@@ -156,25 +244,53 @@ describe('cytube-client', function() {
 							done(err);
 						}
 					});
+					server.emit('playlist', 'Success!');
 				})
 				.catch(function(err) {
 					done(err);
 				});
 			});
 
+			it('should time out if the response is too slow', async () => {
+				try {
+					client = await cytubeClient.connect(Object.assign({timeout: 1}, testOptions));
+					await client.getPlaylist();
+				}
+				catch(err) {
+					err.message.should.contain('timed out');
+					return;
+				}
+				throw new Error('No error thrown.');
+			});
+
+			it('should time out if the response is too slow when using callbacks', done => {
+				cytubeClient.connect(Object.assign({timeout: 1}, testOptions), (err, res) => {
+					if(err) {
+						done(err);
+						return;
+					}
+					client = res;
+					client.getPlaylist(err => {
+						if(!err) {
+							done('No error received.');
+							return;
+						}
+						err.message.should.contain('timed out');
+						done();
+					});
+				});
+			});
+
 		});
 
-		describe('#getUserlist()', function() {
+		describe('#getUserlist()', () => {
 
 			it('should return the value emitted on userlist', function(done) {
-				server.on('connection', function(socket) {
-					socket.on('joinChannel', function() {
-						server.emit('userlist', 'Success!');
-					});
-				})
 				cytubeClient.connect(testOptions)
 				.then(function(res) {
+					client = res;
 					res.getUserlist().should.eventually.equal('Success!').notify(done);
+					server.emit('userlist', 'Success!');
 				})
 				.catch(function(err) {
 					done(err);
@@ -182,14 +298,10 @@ describe('cytube-client', function() {
 			});
 
 			it('should also work with a callback', function(done) {
-				server.on('connection', function(socket) {
-					socket.on('joinChannel', function() {
-						server.emit('userlist', 'Success!');
-					});
-				})
 				cytubeClient.connect(testOptions)
 				.then(function(res) {
-					res.getUserlist( (err, data) => {
+					client = res;
+					res.getUserlist((err, data) => {
 						if(!err && data === 'Success!') {
 							done();
 						}
@@ -197,9 +309,102 @@ describe('cytube-client', function() {
 							done(err);
 						}
 					});
+					server.emit('userlist', 'Success!');
 				})
 				.catch(function(err) {
 					done(err);
+				});
+			});
+
+			it('should time out if the response is too slow', async () => {
+				try {
+					client = await cytubeClient.connect(Object.assign({timeout: 1}, testOptions));
+					await client.getUserlist();
+				}
+				catch(err) {
+					err.message.should.contain('timed out');
+					return;
+				}
+				throw new Error('No error thrown.');
+			});
+
+			it('should time out if the response is too slow when using callbacks', done => {
+				cytubeClient.connect(Object.assign({timeout: 1}, testOptions), (err, res) => {
+					if(err) {
+						done(err);
+						return;
+					}
+					client = res;
+					client.getUserlist(err => {
+						if(!err) {
+							done('No error received.');
+							return;
+						}
+						err.message.should.contain('timed out');
+						done();
+					});
+				});
+			});
+
+		});
+
+		describe('#on()', () => {
+
+			it('should attach a listener to an arbitrary socket event', done => {
+				cytubeClient.connect(testOptions, (err, res) => {
+					if(err || !res) {
+						done(err);
+						return;
+					}
+					client = res;
+					client.on('sup dawg?', () => {
+						done();
+					});
+					server.emit('sup dawg?');
+				});
+			});
+
+		});
+
+		describe('#once()', () => {
+
+			it('should attach a single-use listener to an arbitrary socket event', done => {
+				cytubeClient.connect(testOptions, (err, res) => {
+					if(err || !res) {
+						done(err);
+						return;
+					}
+					client = res;
+					client.once('sup dawg?', () => {
+						server.emit('sup dawg?');
+						// done() being called twice is an error condition for mocha
+						done();
+					});
+					server.emit('sup dawg?');
+				});
+			});
+
+		});
+
+		describe('#off()', () => {
+
+			it('should detach a listener to an arbitrary socket event', done => {
+				cytubeClient.connect(testOptions, (err, res) => {
+					if(err || !res) {
+						done(err);
+						return;
+					}
+					client = res;
+					const badCallback = function() {
+						done('Listener was not removed.');
+					};
+					client.on('sup dawg?', badCallback);
+					client.off('sup dawg?', badCallback);
+					// Attach a new listener for success
+					client.on('sup dawg?', () => {
+						done();
+					});
+					server.emit('sup dawg?');
 				});
 			});
 
