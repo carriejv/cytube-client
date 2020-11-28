@@ -186,6 +186,36 @@ describe('cytube-client', () => {
 				});
 			});
 
+			it('should time out if the response is too slow', async () => {
+				try {
+					client = await cytubeClient.connect(Object.assign({timeout: 1}, testOptions));
+					await client.getCurrentMedia();
+				}
+				catch(err) {
+					err.message.should.contain('timed out');
+					return;
+				}
+				throw new Error('No error thrown.');
+			});
+
+			it('should time out if the response is too slow when using callbacks', done => {
+				cytubeClient.connect(Object.assign({timeout: 1}, testOptions), (err, res) => {
+					if(err) {
+						done(err);
+						return;
+					}
+					client = res;
+					client.getCurrentMedia(err => {
+						if(!err) {
+							done('No error received.');
+							return;
+						}
+						err.message.should.contain('timed out');
+						done();
+					});
+				});
+			});
+
 		});
 
 		describe('#getPlaylist()', () => {
@@ -221,6 +251,36 @@ describe('cytube-client', () => {
 				});
 			});
 
+			it('should time out if the response is too slow', async () => {
+				try {
+					client = await cytubeClient.connect(Object.assign({timeout: 1}, testOptions));
+					await client.getPlaylist();
+				}
+				catch(err) {
+					err.message.should.contain('timed out');
+					return;
+				}
+				throw new Error('No error thrown.');
+			});
+
+			it('should time out if the response is too slow when using callbacks', done => {
+				cytubeClient.connect(Object.assign({timeout: 1}, testOptions), (err, res) => {
+					if(err) {
+						done(err);
+						return;
+					}
+					client = res;
+					client.getPlaylist(err => {
+						if(!err) {
+							done('No error received.');
+							return;
+						}
+						err.message.should.contain('timed out');
+						done();
+					});
+				});
+			});
+
 		});
 
 		describe('#getUserlist()', () => {
@@ -253,6 +313,98 @@ describe('cytube-client', () => {
 				})
 				.catch(function(err) {
 					done(err);
+				});
+			});
+
+			it('should time out if the response is too slow', async () => {
+				try {
+					client = await cytubeClient.connect(Object.assign({timeout: 1}, testOptions));
+					await client.getUserlist();
+				}
+				catch(err) {
+					err.message.should.contain('timed out');
+					return;
+				}
+				throw new Error('No error thrown.');
+			});
+
+			it('should time out if the response is too slow when using callbacks', done => {
+				cytubeClient.connect(Object.assign({timeout: 1}, testOptions), (err, res) => {
+					if(err) {
+						done(err);
+						return;
+					}
+					client = res;
+					client.getUserlist(err => {
+						if(!err) {
+							done('No error received.');
+							return;
+						}
+						err.message.should.contain('timed out');
+						done();
+					});
+				});
+			});
+
+		});
+
+		describe('#on()', () => {
+
+			it('should attach a listener to an arbitrary socket event', done => {
+				cytubeClient.connect(testOptions, (err, res) => {
+					if(err || !res) {
+						done(err);
+						return;
+					}
+					client = res;
+					client.on('sup dawg?', () => {
+						done();
+					});
+					server.emit('sup dawg?');
+				});
+			});
+
+		});
+
+		describe('#once()', () => {
+
+			it('should attach a single-use listener to an arbitrary socket event', done => {
+				cytubeClient.connect(testOptions, (err, res) => {
+					if(err || !res) {
+						done(err);
+						return;
+					}
+					client = res;
+					client.once('sup dawg?', () => {
+						server.emit('sup dawg?');
+						// done() being called twice is an error condition for mocha
+						done();
+					});
+					server.emit('sup dawg?');
+				});
+			});
+
+		});
+
+		describe('#off()', () => {
+
+			it('should detach a listener to an arbitrary socket event', done => {
+				cytubeClient.connect(testOptions, (err, res) => {
+					if(err || !res) {
+						done(err);
+						return;
+					}
+					client = res;
+					const badCallback = function() {
+						done('Listener was not removed.');
+					};
+					client.on('sup dawg?', badCallback);
+					client.off('sup dawg?', badCallback);
+					// Attach a new listener for success
+					client.on('sup dawg?', () => {
+						done();
+					});
+					server.emit('sup dawg?');
 				});
 			});
 
