@@ -74,8 +74,8 @@ CytubeConnection.prototype.close = function() {
  */
 CytubeConnection.prototype.getCurrentMedia = function(callback) {
 	let promise = new Promise((resolve, reject) => {
-		var timeout = this.timeout ? undefined : setTimeout(function() {
-			reject(ERR_PREFIX + 'Request timed out.');
+		var timeout = !this.timeout ? undefined : setTimeout(function() {
+			reject(new Error(ERR_PREFIX + 'Request timed out.'));
 		}, this.timeout);
 		this.socket.once('changeMedia', (data) => {
 			clearTimeout(timeout);
@@ -102,8 +102,8 @@ CytubeConnection.prototype.getCurrentMedia = function(callback) {
  */
 CytubeConnection.prototype.getPlaylist = function(callback) {
 	let promise = new Promise((resolve, reject) => {
-		var timeout = this.timeout ? undefined : setTimeout(function() {
-			reject(ERR_PREFIX + 'Request timed out.');
+		var timeout = !this.timeout ? undefined : setTimeout(function() {
+			reject(new Error(ERR_PREFIX + 'Request timed out.'));
 		}, this.timeout);
 		this.socket.once('playlist', (data) => {
 			clearTimeout(timeout);
@@ -130,8 +130,8 @@ CytubeConnection.prototype.getPlaylist = function(callback) {
  */
 CytubeConnection.prototype.getUserlist = function(callback) {
 	let promise = new Promise((resolve, reject) => {
-		var timeout = this.timeout ? undefined : setTimeout(function() {
-			reject(ERR_PREFIX + 'Request timed out.');
+		var timeout = !this.timeout ? undefined : setTimeout(function() {
+			reject(new Error(ERR_PREFIX + 'Request timed out.'));
 		}, this.timeout);
 		this.socket.once('userlist', (data) => {
 			clearTimeout(timeout);
@@ -160,41 +160,45 @@ CytubeConnection.prototype.getUserlist = function(callback) {
  */
 let connect = function(settings, callback) {
 	let promise = new Promise((resolve, reject) => {
-		let channel = (settings.channel ? settings.channel : settings);
+		// Build settings object 
+		if(typeof settings !== 'object') {
+			settings = {
+				channel: settings,
+				secure: true,
+				reconnection: true,
+				timeout: DEFAULT_TIMEOUT
+			}
+		}
+		if(!settings.channel) {
+			reject(new Error(ERR_PREFIX + 'You must pass the name of a cytu.be channel or a settings object with a channel property.'));
+		}
 		let socketServer;
 
-		if(!channel) {
-			reject(ERR_PREFIX + 'You must pass the name of a cytu.be channel or a settings object with a channel property.');
-		}
-
 		// Establish the connection to the socket server, either using an explicit url or retrieving connection info from cytube.
-		let socketPromise = new Promise( (resolve, reject) => {
+		let socketPromise = new Promise((resolve, reject) => {
 			let socket;
-			// Test for secure and reconnection explicitly being set to false (default true);
-			let secure = (settings.secure == false ? false : true);
-			let reconnection = (settings.reconnection == false ? false : true);
 			if(settings.socketServer) {
 				socketServer = settings.socketServer;
-				socket = io(socketServer, {reconnection: reconnection, transports: ['websocket']});
+				socket = io(socketServer, {reconnection: settings.reconnection, transports: ['websocket']});
 				resolve(socket);
 			}
 			else {
-				let configUrl = CONFIG_URL.replace('%channel', channel);
+				let configUrl = CONFIG_URL.replace('%channel', settings.channel);
 				axios({url: configUrl, responseType: 'json'})
-					.then( (res) => {
+					.then(res => {
 						for(let val of res.data.servers) {
-							if(secure == val.secure) {
+							if(settings.secure === val.secure) {
 								socketServer = val.url;
-								socket = io(socketServer, {reconnection: reconnection, transports: ['websocket']});
+								socket = io(socketServer, {reconnection: settings.reconnection, transports: ['websocket']});
 							}
 						}
 						if(socket) {
 							resolve(socket);
 						}
 						else {
-							reject(ERR_PREFIX + 'Cytube did not respond with valid connection info for the specified channel.')
+							reject(new Error(ERR_PREFIX + 'Cytube did not respond with valid connection info for the specified channel.'));
 						}
-					}).catch( (err) => {
+					}).catch(err => {
 						reject(ERR_PREFIX + err);
 					});
 			}
@@ -202,44 +206,46 @@ let connect = function(settings, callback) {
 
 		// When the socket promise resolves, we can move forward and join channels.
 		socketPromise.then(socket => {
-			// Set up connect handler.
-			socket.on('connect', () => {
-				socket.emit('joinChannel', {
-					name: channel
-				});
-			})
-			// CyTube doesn't give us a response to our login attempt, it just sends another needPassword -- so we have to track it ourselves.
-			let pwAttempted = false;
+			// CyTube doesn't have any post-joinChannel handshake. The first response on success is (usually) a setPermissions to the client
+			socket.on('setPermissions', () => resolve(new CytubeConnection(socket, socketServer, settings.channel, typeof settings === 'object' && settings.timeout)));
+			// CyTube doesn't give us a response to our login attempt,
+			// it just sends another needPassword -- so we have to track it ourselves.
+			// Confusingly, it can also send two requests before receiving our response,
+			// so a counter is used to ensure at least one is an error response.
+			let pwAttempted = 0;
 			socket.on('needPassword', () => {
 				if(settings.password) {
-					if(pwAttempted) {
-						console.error(ERR_PREFIX + 'The password provided is not correct. Connection closed.');
+					if(pwAttempted > 2) {
 						socket.close();
+						reject(new Error(ERR_PREFIX + 'The password provided is not correct. Connection closed.'));
 					}
 					else {
 						socket.emit('channelPassword', settings.password);
-						pwAttempted = true;
+						pwAttempted++;
 					}
 				}
 				else {
-					console.error(ERR_PREFIX + 'The specified channel requires a password but one was not provided. Connection closed.');
 					socket.close();
+					reject(new Error(ERR_PREFIX + 'The specified channel requires a password but one was not provided. Connection closed.'));
 				}
 			});
-
-			let connection = new CytubeConnection(socket, socketServer, channel, typeof settings === 'object' && settings.timeout);
-			resolve(connection);
-
-		}).catch( (err) => {
+			// Set up connect handler now that post-join handlers are in place.
+			socket.on('connect', () => {
+				socket.emit('joinChannel', {
+					name: settings.channel
+				});
+			});
+		}).catch(err => {
 			// If there was an error establishing connection, we just pass it upstream.
 			reject(err);
 		});
 	});
+
 	if(callback && typeof callback === 'function') {
 		connect(settings)
-		.then( (res) => {
+		.then(res => {
 			callback(false, res);
-		}).catch( (err) => {
+		}).catch(err => {
 			callback(err);
 		});
 	}
