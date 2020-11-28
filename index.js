@@ -11,7 +11,7 @@ const axios = require('axios');
  */
 const CONFIG_URL = 'https://cytu.be/socketconfig/%channel.json';
 const ERR_PREFIX = 'cytube-client: ';
-const TIMEOUT = 10000;
+const DEFAULT_TIMEOUT = 10000;
 
 /**
  * CytubeConnection defines the object returned by a public api call to connect.
@@ -21,11 +21,13 @@ const TIMEOUT = 10000;
  * @property {Object} socket - The Socket.io connection.
  * @property {string} socketServer - The url of the socket server.
  * @property {string} channel - The channel on which to listen for events.
+ * @property {number} [timeout] - Optional timeout for cytu.be requests in ms. Default 10000 (10s). Set to 0 to disable.
  */
-const CytubeConnection = function(socket, socketServer, channel) {
+const CytubeConnection = function(socket, socketServer, channel, timeout) {
 	this.socket = socket;
 	this.socketServer = socketServer;
 	this.channel = channel;
+	this.timeout = timeout === undefined ? DEFAULT_TIMEOUT : timeout;
 };
 
 /**
@@ -72,9 +74,9 @@ CytubeConnection.prototype.close = function() {
  */
 CytubeConnection.prototype.getCurrentMedia = function(callback) {
 	let promise = new Promise((resolve, reject) => {
-		var timeout = setTimeout(function() {
+		var timeout = this.timeout ? undefined : setTimeout(function() {
 			reject(ERR_PREFIX + 'Request timed out.');
-		}, TIMEOUT);
+		}, this.timeout);
 		this.socket.once('changeMedia', (data) => {
 			clearTimeout(timeout);
 			resolve(data);
@@ -100,9 +102,9 @@ CytubeConnection.prototype.getCurrentMedia = function(callback) {
  */
 CytubeConnection.prototype.getPlaylist = function(callback) {
 	let promise = new Promise((resolve, reject) => {
-		var timeout = setTimeout(function() {
+		var timeout = this.timeout ? undefined : setTimeout(function() {
 			reject(ERR_PREFIX + 'Request timed out.');
-		}, TIMEOUT);
+		}, this.timeout);
 		this.socket.once('playlist', (data) => {
 			clearTimeout(timeout);
 			resolve(data);
@@ -128,9 +130,9 @@ CytubeConnection.prototype.getPlaylist = function(callback) {
  */
 CytubeConnection.prototype.getUserlist = function(callback) {
 	let promise = new Promise((resolve, reject) => {
-		var timeout = setTimeout(function() {
+		var timeout = this.timeout ? undefined : setTimeout(function() {
 			reject(ERR_PREFIX + 'Request timed out.');
-		}, TIMEOUT);
+		}, this.timeout);
 		this.socket.once('userlist', (data) => {
 			clearTimeout(timeout);
 			resolve(data);
@@ -225,7 +227,7 @@ let connect = function(settings, callback) {
 				}
 			});
 
-			let connection = new CytubeConnection(socket, socketServer, channel);
+			let connection = new CytubeConnection(socket, socketServer, channel, typeof settings === 'object' && settings.timeout);
 			resolve(connection);
 
 		}).catch( (err) => {

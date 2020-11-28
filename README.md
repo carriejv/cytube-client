@@ -23,10 +23,9 @@ or
 ### With Promises
 
 ```javascript
-;
 let cyClient;
 try {
-    clClient = await require('cytube-client').connect('channel');
+    cyClient = await require('cytube-client').connect('channel');
 } catch(err) {
     // Handle client connection errors.
 }
@@ -88,7 +87,10 @@ var options = {
     // If true, attempts to reconnect indefinitely if disconnected. Default true.
     reconnect: true,
     // If set, connects to the specified url instead of searching for a channel on cytu.be.
-    socketServer: 'https://your.sync.server:3000'
+    socketServer: 'https://your.sync.server:3000',
+    // Timeout for requests to the sync server in ms. Default 10000ms (10s).
+    // Set to 0 to disable.
+    timeout: 15000
 };
 
 var cytube = require('cytube-client');

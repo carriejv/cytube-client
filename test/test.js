@@ -77,6 +77,16 @@ describe('cytube-client', function() {
 				}
 			});
 		});
+		it('should set a custom timeout', async function() {
+			const cyClient = await cytubeClient.connect(Object.assign({timeout: 15000}, testOptions));
+			cyClient.should.not.equal(undefined);
+			cyClient.timeout.should.equal(15000);
+		});
+		it('should set a default timeout', async function() {
+			const cyClient = await cytubeClient.connect(Object.assign(testOptions));
+			cyClient.should.not.equal(undefined);
+			cyClient.timeout.should.equal(10000);
+		});
 
 	});
 
