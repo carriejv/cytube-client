@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/cytube-client.svg)](https://www.npmjs.com/package/cytube-client) [![npm downloads](https://img.shields.io/npm/dt/cytube-client)](https://www.npmjs.com/package/cytube-client)  [![npm license](https://img.shields.io/npm/l/cytube-client.svg)](https://www.npmjs.com/package/cytube-client)
 
-[![dependencies](https://img.shields.io/david/carriejv/cytube-client.svg)](https://david-dm.org/carriejv/cytube-client) [![Build Status](https://img.shields.io/travis/com/carriejv/cytube-client.svg)](https://travis-ci.com/carriejv/cytube-client) [![GitKraken](https://img.shields.io/badge/<3-GitKraken-green.svg)](https://www.gitkraken.com/invite/om4Du5zG)
+[![dependencies](https://img.shields.io/david/carriejv/cytube-client.svg)](https://david-dm.org/carriejv/cytube-client) [![Build Status](https://github.com/carriejv/cytube-client/workflows/ci-build/badge.svg?branch=master)](https://github.com/carriejv/cytube-client/actions?query=workflow%3Aci-build) [![GitKraken](https://img.shields.io/badge/<3-GitKraken-green.svg)](https://www.gitkraken.com/invite/om4Du5zG)
 
 A simple [Promise-based](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise), non-blocking [socket.io client](https://github.com/socketio/socket.io-client) for retrieving information from [cytu.be](https://github.com/calzoneman/sync) servers with NodeJS. Supports async/await, then/catch, and callbacks.
 
