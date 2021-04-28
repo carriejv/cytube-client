@@ -1,7 +1,10 @@
 name: npm-publish
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - 'v?[0-9]+.[0-9]+.[0-9]+'
+    branches-ignore:
+      - '**'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,6 +15,8 @@ jobs:
         node-version: '14.x'
         registry-url: 'https://registry.npmjs.org'
     - run: npm install --legacy-peer-deps
+    - run: npm run build --if-present
+    - run: npm test
     - run: npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
